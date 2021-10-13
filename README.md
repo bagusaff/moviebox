@@ -23,3 +23,11 @@ Jalankan Projek
 ### `npm start`
 
 Buka [http://localhost:3000](http://localhost:3000) untuk melihat dari browser.
+
+## Feature
+
+- Infinite Scroll
+
+- Image onClick shows modal
+
+- One Page movie detail
