@@ -1,33 +1,71 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useSelector, useDispatch } from "react-redux";
+//Import redux actions creator function
+import { searchMovies } from "../state";
+import MovieCard from "../components/MovieCard";
 
 const Home = () => {
   const dispatch = useDispatch();
-
+  //Redux State
+  const { movies, isLoading } = useSelector((state) => state.movie);
   //Local State
   const [searchKeyword, setSearchKeyword] = useState("");
-
-  //Timer Ref untuk fitur otomatis cari ketika user berhenti mengetikkan kata pada search box
-  const timer = useRef(null);
+  const [page, setPage] = useState(1);
 
   //Local Function
-  const onChange = (newVal) => {
-    setSearchKeyword(newVal);
-    timer.current && clearTimeout(timer.current);
-    timer.current = setTimeout(() => proceedSearchMovie(newVal), 1500);
-  };
-
+  useEffect(() => {
+    dispatch(searchMovies("", page));
+  }, []);
   //Menjalankan fungsi search movie setelah search box berhenti menerima input dari user setelah 1,5 detik
-  const proceedSearchMovie = (value) => {};
-
+  const proceedSearchMovie = (e) => {
+    e.preventDefault();
+    dispatch(searchMovies(searchKeyword, page));
+  };
+  // infinite scroll listener
+  window.onscroll = (e) => {
+    const bottom =
+      document.documentElement.scrollHeight -
+      document.documentElement.scrollTop -
+      document.documentElement.clientHeight;
+    console.log(document.documentElement.scrollTop);
+    if (bottom < 15) {
+      let newPage = page + 1;
+      setPage(newPage);
+      proceedSearchMovie(e, searchKeyword, newPage);
+      console.log(page);
+    }
+  };
   return (
     <Wrapper>
       <Title>Movie Box</Title>
       <Desc>Cari Film berdasar judul</Desc>
-      <form>
-        <input value={searchKeyword} onChange={onChange} />
+      <form onSubmit={proceedSearchMovie}>
+        <SearchForm
+          value={searchKeyword}
+          onChange={(e) => setSearchKeyword(e.target.value)}
+        />
+        <input type="submit" value="Cari" />
       </form>
+      <div>
+        {movies && movies.length ? (
+          movies.map((item, index) => {
+            return (
+              <MovieCard
+                MovieTitle={item.Title}
+                Poster={item.Poster}
+                Year={item.Year}
+                Type={item.Type}
+                Id={item.imdbID}
+                key={index}
+              />
+            );
+          })
+        ) : (
+          <p>Empty</p>
+        )}
+      </div>
+      {isLoading && <p>Loading</p>}
     </Wrapper>
   );
 };
@@ -39,7 +77,7 @@ const Wrapper = styled.div`
   margin: auto;
   background-color: #fff;
   padding: 20px;
-  height: 100vh;
+  height: auto;
 `;
 
 const Title = styled.h1`
@@ -51,4 +89,9 @@ const Desc = styled.h4`
   margin-top: 20px;
   font-weight: 400;
   font-size: 16px;
+`;
+
+const SearchForm = styled.input`
+  width: 100%;
+  margin-top: 10px;
 `;
